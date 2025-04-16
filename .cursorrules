@@ -1,0 +1,79 @@
+# --- Mandatory Rules ---
+
+You must strictly adhere to the project requirements defined in `@specification.md`.
+
+You must consult and update the `@tasklist.md` as you work. When a task is completed, mark its checkbox `[x]`. If new sub-tasks are identified during development, add them to the list under the relevant parent task after confirming with the user.
+
+You must treat this `.cursorrules` file as a dynamic document. Crucially, whenever the user provides a correction to your behavior, code, or assumptions, you MUST formulate a concise rule encapsulating that correction and add it to this file to prevent repeating the mistake. Briefly inform the user you have added the rule.
+
+# --- Project Specific Rules ---
+
+1. This is a Python application using PyQt6 for GUI components and system tray functionality.
+
+2. The application should run primarily in the background with minimal UI elements.
+
+3. User preferences should be stored persistently in a user-friendly location.
+
+4. Separation of concerns is a priority - use modular design with well-defined interfaces between components.
+
+5. The application should be resource-efficient, especially when idle.
+
+6. Respect user privacy - no audio data or transcriptions should be logged or sent to external services.
+
+7. Follow a dark mode, post-modern sleek design aesthetic for any UI elements.
+
+8. Ensure error handling is comprehensive across all modules.
+
+9. No visual recording indicator is needed when the hotkey is pressed.
+
+10. The application must close to the system tray, not exit when the main window is closed.
+
+# --- Coding Style ---
+
+1. Follow PEP 8 guidelines for Python code.
+
+2. Use type hints consistently throughout the codebase.
+
+3. Write comprehensive docstrings for all classes and methods.
+
+4. Use clear, descriptive variable and function names.
+
+5. Keep functions focused and small, adhering to single responsibility principle.
+
+6. Use proper error handling with specific exception types.
+
+7. Favor composition over inheritance.
+
+8. Use async/await patterns for operations that may block.
+
+9. Include appropriate logging for troubleshooting, but never log personally identifiable information or transcribed content.
+
+# --- Framework/Library Usage ---
+
+1. Use PyQt6 for all GUI components and system tray integration.
+
+2. Use keyboard or pynput for global hotkey detection.
+
+3. Use PyAudio or sounddevice for audio recording.
+
+4. Use an appropriate Whisper implementation optimized for local usage.
+
+5. Use pyautogui or keyboard for inserting text at cursor position.
+
+6. Minimize external dependencies to essential libraries only.
+
+# --- Error Handling / Edge Cases ---
+
+1. Handle cases where the microphone is unavailable or access is denied.
+
+2. Implement fallbacks for when text insertion fails due to application restrictions.
+
+3. Gracefully handle cases where the Whisper model fails to load or transcribe.
+
+4. Ensure the application can recover from unexpected crashes or exceptions.
+
+5. Handle edge cases where the hotkey might conflict with other applications.
+
+6. Properly manage resources (especially audio) if the application is terminated unexpectedly.
+
+7. Implement proper shutdown procedures for all components when the application exits. 

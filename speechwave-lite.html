@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxFlow | STT → Translate → TTS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #10b981;
+            --accent: #3b82f6;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            overflow: hidden;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--secondary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            opacity: 0;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+            70% {
+                transform: scale(1.3);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+        }
+        
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 20px;
+            background: var(--secondary);
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            gap: 4px;
+        }
+        
+        .wave-bar {
+            width: 4px;
+            height: 10px;
+            background: var(--secondary);
+            border-radius: 4px;
+            animation: wave 1.2s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 30px; }
+        }
+        
+        .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.4s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center gradient-bg">
+    <div class="container mx-auto px-4">
+        <div class="glass-card rounded-2xl p-8 max-w-2xl mx-auto">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-emerald-400">
+                        VoxFlow
+                    </h1>
+                    <p class="text-slate-400">STT → Translate → TTS</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="settingsBtn" class="p-2 rounded-full hover:bg-slate-700 transition">
+                        <i class="fas fa-cog text-slate-300"></i>
+                    </button>
+                    <button id="helpBtn" class="p-2 rounded-full hover:bg-slate-700 transition">
+                        <i class="fas fa-question text-slate-300"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="relative">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">Original Text</label>
+                    <textarea id="inputText" class="w-full h-48 bg-slate-800 border border-slate-700 rounded-xl p-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" placeholder="Your transcribed text will appear here..." readonly></textarea>
+                    <div id="cursorIndicator" class="absolute bottom-4 right-4 text-xs text-slate-500 hidden">
+                        <i class="fas fa-mouse-pointer mr-1"></i> Cursor position
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-slate-400">Translated Text</label>
+                        <button id="playTTS" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg flex items-center transition">
+                            <i class="fas fa-play mr-1 text-blue-400"></i> Play
+                        </button>
+                    </div>
+                    <textarea id="outputText" class="w-full h-48 bg-slate-800 border border-slate-700 rounded-xl p-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Translation will appear here..." readonly></textarea>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-center">
+                <div class="relative w-24 h-24 mb-6 flex items-center justify-center">
+                    <div id="pulseRing" class="pulse-ring hidden"></div>
+                    <button id="voiceBtn" class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-emerald-500 flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:outline-none">
+                        <i id="voiceIcon" class="fas fa-microphone text-2xl"></i>
+                    </button>
+                </div>
+                
+                <div id="waveform" class="waveform hidden mb-4">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                
+                <div class="text-center">
+                    <p id="statusText" class="text-slate-400 mb-2">Press and hold <span class="bg-slate-800 px-2 py-1 rounded-md border border-slate-700">Alt + V</span> to record</p>
+                    <p class="text-xs text-slate-500">Release to transcribe, translate, and speak</p>
+                </div>
+            </div>
+            
+            <div id="settingsPanel" class="mt-6 hidden">
+                <div class="border-t border-slate-700 pt-4">
+                    <h3 class="text-lg font-medium text-slate-300 mb-4">Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Hotkey</label>
+                            <div class="flex">
+                                <input type="text" value="Alt + V" class="bg-slate-800 border border-slate-700 rounded-l-lg px-3 py-2 text-slate-200 w-full" readonly>
+                                <button class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-r-lg text-slate-300 transition">Change</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Input Language</label>
+                            <select id="inputLang" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 w-full">
+                                <option value="en-US">English (US)</option>
+                                <option value="en-GB">English (UK)</option>
+                                <option value="es-ES">Spanish</option>
+                                <option value="fr-FR">French</option>
+                                <option value="de-DE">German</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Translate To</label>
+                            <select id="outputLang" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 w-full">
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="it">Italian</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">TTS Voice</label>
+                            <select id="ttsVoice" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 w-full">
+                                <option value="default">Default</option>
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="notification" class="fixed bottom-4 right-4 glass-card px-4 py-3 rounded-lg flex items-center hidden">
+            <i id="notificationIcon" class="fas mr-3"></i>
+            <span id="notificationText"></span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const voiceBtn = document.getElementById('voiceBtn');
+            const voiceIcon = document.getElementById('voiceIcon');
+            const pulseRing = document.getElementById('pulseRing');
+            const waveform = document.getElementById('waveform');
+            const statusText = document.getElementById('statusText');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const helpBtn = document.getElementById('helpBtn');
+            const playTTS = document.getElementById('playTTS');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const cursorIndicator = document.getElementById('cursorIndicator');
+            const notification = document.getElementById('notification');
+            const notificationIcon = document.getElementById('notificationIcon');
+            const notificationText = document.getElementById('notificationText');
+            const inputLang = document.getElementById('inputLang');
+            const outputLang = document.getElementById('outputLang');
+            const ttsVoice = document.getElementById('ttsVoice');
+            
+            // State
+            let isRecording = false;
+            let altPressed = false;
+            let vPressed = false;
+            let cursorPosition = 0;
+            let speechSynthesis = window.speechSynthesis;
+            let voices = [];
+            
+            // Load available TTS voices
+            function loadVoices() {
+                voices = speechSynthesis.getVoices();
+                // In a real app, you would populate voice options based on available voices
+            }
+            
+            // Speech recognition setup
+            let recognition;
+            try {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = inputLang.value;
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    insertAtCursor(transcript);
+                    translateText(transcript);
+                    showNotification('success', 'Transcription complete');
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error', event.error);
+                    showNotification('error', `Error: ${event.error}`);
+                };
+                
+                recognition.onend = function() {
+                    if (isRecording) {
+                        recognition.start(); // Keep recording if still holding
+                    } else {
+                        stopRecording();
+                    }
+                };
+            } catch (e) {
+                console.error('Speech recognition not supported', e);
+                showNotification('error', 'Speech recognition not supported in your browser');
+            }
+            
+            // Track cursor position
+            inputText.addEventListener('click', updateCursorPosition);
+            inputText.addEventListener('keyup', updateCursorPosition);
+            
+            function updateCursorPosition() {
+                cursorPosition = inputText.selectionStart;
+                cursorIndicator.classList.remove('hidden');
+                setTimeout(() => cursorIndicator.classList.add('hidden'), 2000);
+            }
+            
+            // Insert text at cursor position
+            function insertAtCursor(text) {
+                const currentText = inputText.value;
+                const beforeCursor = currentText.substring(0, cursorPosition);
+                const afterCursor = currentText.substring(cursorPosition);
+                
+                inputText.value = beforeCursor + text + afterCursor;
+                cursorPosition += text.length;
+                inputText.selectionStart = cursorPosition;
+                inputText.selectionEnd = cursorPosition;
+                inputText.focus();
+            }
+            
+            // Mock translation function (in a real app, use a translation API)
+            function translateText(text) {
+                const languages = {
+                    'en': 'English',
+                    'es': 'Spanish',
+                    'fr': 'French',
+                    'de': 'German',
+                    'it': 'Italian',
+                    'ja': 'Japanese',
+                    'ko': 'Korean'
+                };
+                
+                const targetLang = outputLang.value;
+                const sourceLang = inputLang.value.substring(0, 2);
+                
+                // Mock translation - in reality you'd call an API here
+                const mockTranslations = {
+                    'en': `[Translated to ${languages[targetLang]}] ${text}`,
+                    'es': `[Traducido al ${languages[targetLang]}] ${text}`,
+                    'fr': `[Traduit en ${languages[targetLang]}] ${text}`,
+                    'de': `[Übersetzt ins ${languages[targetLang]}] ${text}`,
+                    'it': `[Tradotto in ${languages[targetLang]}] ${text}`,
+                    'ja': `[${languages[targetLang]}に翻訳] ${text}`,
+                    'ko': `[${languages[targetLang]}로 번역] ${text}`
+                };
+                
+                outputText.value = mockTranslations[targetLang] || text;
+                
+                // Auto-play TTS if setting enabled
+                if (document.getElementById('autoPlay').checked) {
+                    speakText(outputText.value);
+                }
+            }
+            
+            // Text-to-speech function
+            function speakText(text) {
+                if (!speechSynthesis || !text) return;
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = outputLang.value;
+                
+                // Select voice based on preference
+                if (ttsVoice.value === 'female') {
+                    utterance.voice = voices.find(v => v.name.includes('Female') || v.lang.includes('female'));
+                } else if (ttsVoice.value === 'male') {
+                    utterance.voice = voices.find(v => v.name.includes('Male') || v.lang.includes('male'));
+                }
+                
+                speechSynthesis.speak(utterance);
+                
+                utterance.onstart = () => {
+                    playTTS.innerHTML = '<i class="fas fa-pause mr-1 text-blue-400"></i> Pause';
+                    showNotification('info', 'Playing translation...');
+                };
+                
+                utterance.onend = () => {
+                    playTTS.innerHTML = '<i class="fas fa-play mr-1 text-blue-400"></i> Play';
+                };
+            }
+            
+            // Play/pause TTS
+            playTTS.addEventListener('click', function() {
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.pause();
+                    playTTS.innerHTML = '<i class="fas fa-play mr-1 text-blue-400"></i> Play';
+                } else if (speechSynthesis.paused) {
+                    speechSynthesis.resume();
+                    playTTS.innerHTML = '<i class="fas fa-pause mr-1 text-blue-400"></i> Pause';
+                } else {
+                    speakText(outputText.value);
+                }
+            });
+            
+            // Recording controls
+            function startRecording() {
+                if (!recognition) return;
+                
+                isRecording = true;
+                voiceBtn.classList.add('ring-4', 'ring-emerald-500/30');
+                pulseRing.classList.remove('hidden');
+                waveform.classList.remove('hidden');
+                voiceIcon.classList.remove('fa-microphone');
+                voiceIcon.classList.add('fa-microphone-lines');
+                statusText.innerHTML = 'Recording... <span class="typing-cursor"></span>';
+                
+                try {
+                    recognition.lang = inputLang.value;
+                    recognition.start();
+                    showNotification('info', 'Recording started');
+                } catch (e) {
+                    console.error('Recording error:', e);
+                    stopRecording();
+                }
+            }
+            
+            function stopRecording() {
+                isRecording = false;
+                voiceBtn.classList.remove('ring-4', 'ring-emerald-500/30');
+                pulseRing.classList.add('hidden');
+                waveform.classList.add('hidden');
+                voiceIcon.classList.remove('fa-microphone-lines');
+                voiceIcon.classList.add('fa-microphone');
+                statusText.innerHTML = 'Press and hold <span class="bg-slate-800 px-2 py-1 rounded-md border border-slate-700">Alt + V</span> to record';
+                
+                if (recognition) {
+                    recognition.stop();
+                }
+            }
+            
+            // Button click handler
+            voiceBtn.addEventListener('mousedown', startRecording);
+            voiceBtn.addEventListener('mouseup', stopRecording);
+            voiceBtn.addEventListener('mouseleave', stopRecording);
+            
+            // Keyboard controls
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Alt') altPressed = true;
+                if (e.key === 'v' || e.key === 'V') vPressed = true;
+                
+                if (altPressed && vPressed && !isRecording) {
+                    startRecording();
+                    updateCursorPosition(); // Get current cursor position
+                }
+            });
+            
+            document.addEventListener('keyup', function(e) {
+                if (e.key === 'Alt') altPressed = false;
+                if (e.key === 'v' || e.key === 'V') vPressed = false;
+                
+                if (isRecording && (!altPressed || !vPressed)) {
+                    stopRecording();
+                }
+            });
+            
+            // UI Controls
+            settingsBtn.addEventListener('click', function() {
+                settingsPanel.classList.toggle('hidden');
+            });
+            
+            helpBtn.addEventListener('click', function() {
+                showNotification('info', 'Hold Alt+V to record voice, release to transcribe, translate and speak');
+            });
+            
+            // Notification system
+            function showNotification(type, message) {
+                notificationIcon.className = 'fas mr-3';
+                
+                switch(type) {
+                    case 'success':
+                        notificationIcon.classList.add('fa-check-circle', 'text-emerald-400');
+                        break;
+                    case 'error':
+                        notificationIcon.classList.add('fa-times-circle', 'text-rose-400');
+                        break;
+                    case 'info':
+                        notificationIcon.classList.add('fa-info-circle', 'text-blue-400');
+                        break;
+                }
+                
+                notificationText.textContent = message;
+                notification.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    notification.classList.add('opacity-0');
+                    setTimeout(() => {
+                        notification.classList.add('hidden');
+                        notification.classList.remove('opacity-0');
+                    }, 300);
+                }, 3000);
+            }
+            
+            // Initialize voices
+            speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+            
+            // Demo mode for browsers without speech recognition
+            if (!recognition) {
+                voiceBtn.addEventListener('mousedown', function() {
+                    isRecording = true;
+                    voiceBtn.classList.add('ring-4', 'ring-emerald-500/30');
+                    pulseRing.classList.remove('hidden');
+                    waveform.classList.remove('hidden');
+                    voiceIcon.classList.remove('fa-microphone');
+                    voiceIcon.classList.add('fa-microphone-lines');
+                    statusText.innerHTML = 'Recording... <span class="typing-cursor"></span>';
+                    showNotification('info', 'Demo mode: Recording simulated');
+                });
+                
+                voiceBtn.addEventListener('mouseup', function() {
+                    isRecording = false;
+                    voiceBtn.classList.remove('ring-4', 'ring-emerald-500/30');
+                    pulseRing.classList.add('hidden');
+                    waveform.classList.add('hidden');
+                    voiceIcon.classList.remove('fa-microphone-lines');
+                    voiceIcon.classList.add('fa-microphone');
+                    statusText.innerHTML = 'Press and hold <span class="bg-slate-800 px-2 py-1 rounded-md border border-slate-700">Alt + V</span> to record';
+                    
+                    // Insert demo text
+                    const demoTexts = [
+                        "This is a demonstration of voice transcription and translation.",
+                        "VoxFlow makes multilingual communication effortless.",
+                        "Hold Alt+V to record, release to transcribe and translate.",
+                        "The future of voice interfaces is here with real-time translation.",
+                        "Imagine speaking in one language and hearing the translation instantly."
+                    ];
+                    const randomText = demoTexts[Math.floor(Math.random() * demoTexts.length)];
+                    insertAtCursor(randomText);
+                    translateText(randomText);
+                    speakText(outputText.value);
+                    showNotification('success', 'Demo transcription and translation complete');
+                });
+            }
+            
+            // Add auto-play checkbox to settings panel
+            const autoPlayCheckbox = document.createElement('div');
+            autoPlayCheckbox.className = 'flex items-center';
+            autoPlayCheckbox.innerHTML = `
+                <input type="checkbox" id="autoPlay" class="mr-2 rounded bg-slate-800 border-slate-700 text-blue-500 focus:ring-blue-500">
+                <label for="autoPlay" class="text-sm font-medium text-slate-400">Auto-play TTS after translation</label>
+            `;
+            settingsPanel.querySelector('.grid').appendChild(autoPlayCheckbox);
+        });
+    </script>
+</body>
+</html>

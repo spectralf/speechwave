@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+
+# Build artifacts
+build/
+dist/
+*.spec
+SpeechWave.exe
+
+# Logs
+*.log
+logs/
+
+# Test artifacts
+.pytest_cache/
+
+# Temporary files
+*~
+*.swp
+*.bak
+*.tmp
+
+# OS generated files
+.DS_Store
+Thumbs.db 

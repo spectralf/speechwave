@@ -1,0 +1,32 @@
+# GUI and system tray
+PyQt6>=6.0.0
+
+# Hotkey handling
+keyboard>=0.13.5
+pynput>=1.7.6
+
+# Audio processing
+PyAudio>=0.2.11
+numpy>=1.20.0
+
+# Text insertion
+pyautogui>=0.9.53
+
+# Whisper model
+faster-whisper>=0.10.1
+torch>=2.0.0
+soundfile>=0.12.1
+
+# CUDA specific if using GPU, faster-whisper handles this, but good to be aware
+# nvidia-cublas-cu11 # Example for CUDA 11
+# nvidia-cuda-nvrtc-cu11 # Example for CUDA 11
+# nvidia-cuda-runtime-cu11 # Example for CUDA 11
+# nvidia-cudnn-cu11 # Example for CUDA 11
+
+# Utilities
+pyyaml>=6.0
+loguru>=0.6.0
+
+# Development / Testing
+pytest>=7.0.0
+pytest-mock>=3.5.0 
