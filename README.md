@@ -100,7 +100,7 @@ If you find SpeechWave useful, please consider supporting its development!
 
 ![Donation QR Code](qrcode.png)
 
-(You can also add links to platforms like GitHub Sponsors or Ko-fi here)
+
 
 ## 📄 License
 
