@@ -94,6 +94,14 @@ Key libraries used:
 
 See `requirements.txt` for the full list.
 
+## ❤️ Support the Project
+
+If you find SpeechWave useful, please consider supporting its development!
+
+![Donation QR Code](qrcode.png)
+
+(You can also add links to platforms like GitHub Sponsors or Ko-fi here)
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
