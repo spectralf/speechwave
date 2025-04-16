@@ -2,6 +2,18 @@
 
 A minimal, privacy-focused Speech-to-Text (STT) application for Windows that runs in the system tray. Press and hold a hotkey to record your voice, and SpeechWave will transcribe it locally using Whisper and type the text directly at your cursor position.
 
+## 💾 Download & Run (Executable)
+
+The easiest way to use SpeechWave is to download the pre-built executable:
+
+1.  Go to the [**Releases Page**](https://github.com/spectralf/speechwave/releases).
+2.  Find the latest release (e.g., `v0.1.0`).
+3.  Under the **Assets** section, download the `SpeechWave.exe` file.
+4.  Save the `.exe` file somewhere convenient on your computer.
+5.  Double-click `SpeechWave.exe` to run the application. The icon will appear in your system tray.
+
+*(See the [Usage](#-usage) section below for how to use the hotkey)*
+
 ## ✨ Key Features
 
 *   **Hotkey Activation:** Press and hold a user-defined hotkey to start recording.
@@ -11,7 +23,9 @@ A minimal, privacy-focused Speech-to-Text (STT) application for Windows that run
 *   **Configurable:** Settings like the hotkey and Whisper model options can be adjusted.
 *   **Cross-Platform (Potential):** Built with Python and PyQt6, aiming for compatibility (though currently focused on Windows features like text insertion).
 
-## 🚀 Getting Started
+## 🚀 Getting Started (from Source)
+
+If you prefer to run or build the application from the source code:
 
 ### Prerequisites
 
@@ -22,7 +36,7 @@ A minimal, privacy-focused Speech-to-Text (STT) application for Windows that run
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/spectralf/speechwave.git
     cd SpeechWave
     ```
 2.  **Create and activate a virtual environment:**
@@ -40,7 +54,7 @@ A minimal, privacy-focused Speech-to-Text (STT) application for Windows that run
 
 ## 💻 Usage
 
-1.  **Run the application:**
+1.  **(If running from source)** Run the application:
     ```bash
     python src/app.py
     ```
